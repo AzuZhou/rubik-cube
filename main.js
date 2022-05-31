@@ -2,6 +2,8 @@ import './style.css'
 
 import * as THREE from 'three'
 
+import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js'
+
 // const yellow = new THREE.Color(0xe2f705)
 // const green = new THREE.Color(0xa3f307)
 // const blue = new THREE.Color(0x05f9e2)
@@ -13,14 +15,23 @@ const white = new THREE.Color(0xffffff)
 const scene = new THREE.Scene()
 scene.background = white
 
-const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 100)
+const sizes = {
+    width: window.innerWidth,
+    height: window.innerHeight,
+}
+
+const camera = new THREE.PerspectiveCamera(75, sizes.width / sizes.height, 0.1, 100)
 camera.position.setZ(10)
 
+const canvas = document.getElementById('webgl')
 const renderer = new THREE.WebGLRenderer({
-    canvas: document.getElementById('webgl'),
+    canvas,
 })
 renderer.setPixelRatio(window.devicePixelRatio)
-renderer.setSize(window.innerWidth, window.innerHeight)
+renderer.setSize(sizes.width, sizes.height)
+
+const controls = new OrbitControls(camera, canvas)
+controls.enableDamping = true
 
 // TODO: make recursive?
 const createLane = () => {
@@ -66,27 +77,22 @@ const createCube = () => {
 
 const cube = createCube()
 scene.add(cube)
-cube.position.set(0, 0, 0)
 camera.lookAt(cube.position)
+controls.update() // called after every manual camera change
 
 renderer.render(scene, camera)
 
-const cursor = {
-    x: 0,
-    y: 0,
-}
-
-window.addEventListener('mousemove', (event) => {
-    cursor.x = event.clientX / window.innerWidth - 0.5
-    cursor.y = -(event.clientY / window.innerHeight - 0.5)
+window.addEventListener('resize', () => {
+    sizes.width = window.innerWidth
+    sizes.height = window.innerHeight
+    camera.aspect = sizes.width / sizes.height
+    camera.updateProjectionMatrix()
+    renderer.setSize(sizes.width, sizes.height)
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2))
 })
 
 const animate = () => {
-    camera.position.x = Math.sin(cursor.x * Math.PI * 2) * 6
-    camera.position.z = Math.cos(cursor.x * Math.PI * 2) * 6
-    camera.position.y = cursor.y * 9
-    camera.lookAt(cube.position)
-
+    controls.update() // sis controls.enableDamping or controls.autoRotate true
     renderer.render(scene, camera)
     window.requestAnimationFrame(animate)
 }
