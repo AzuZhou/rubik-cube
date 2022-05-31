@@ -13,8 +13,8 @@ const white = new THREE.Color(0xffffff);
 const scene = new THREE.Scene();
 scene.background = white;
 
-const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
-camera.position.setZ(7);
+const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 100);
+camera.position.setZ(10);
 
 const renderer = new THREE.WebGLRenderer({
   canvas: document.getElementById('webgl'),
@@ -22,13 +22,13 @@ const renderer = new THREE.WebGLRenderer({
 renderer.setPixelRatio(window.devicePixelRatio);
 renderer.setSize(window.innerWidth, window.innerHeight);
 
-// TODO: create cubes using BufferGeometry
+// TODO: make recursive?
 const createLane = () => {
   const group = new THREE.Group();
   const geometry = new THREE.BoxGeometry(1, 1, 1);
   const material = new THREE.MeshBasicMaterial({ color: black, wireframe: true});
 
-  for (let i = 0; i < 3; i++) {
+  for (let i = -1; i < 2; i++) {
     const mesh = new THREE.Mesh(geometry, material);
     mesh.position.x = i;
     group.add(mesh);
@@ -40,7 +40,7 @@ const createLane = () => {
 const createSide = () => {
   const group = new THREE.Group();
   
-  for (let i = 0; i < 3; i++) {
+  for (let i = -1; i < 2; i++) {
     const lane = createLane()
     lane.position.y = i;
     group.add(lane);
@@ -52,20 +52,43 @@ const createSide = () => {
 const createCube = () => {
   const group = new THREE.Group();
 
-  for (let i = 0; i < 3; i++) {
+  for (let i = -1; i < 2; i++) {
     const side = createSide()
     side.position.z = i;
     group.add(side);
   }
 
-  return group;
+    return group;
 };
 
-const cube = createCube();
 
-cube.rotation.x = Math.PI * 0.25;
-cube.rotation.y = Math.PI * 0.25;
+const cube = createCube();
 scene.add(cube);
-// use quaternions
+cube.position.set(0, 0, 0)
+camera.lookAt(cube.position)
 
 renderer.render(scene, camera);
+
+
+const cursor = {
+  x: 0,
+  y: 0
+}
+
+window.addEventListener('mousemove', (event) =>
+{
+  cursor.x = event.clientX / window.innerWidth - 0.5;
+  cursor.y = - (event.clientY / window.innerHeight - 0.5);
+})
+
+const animate = () => {
+  camera.position.x = Math.sin(cursor.x * Math.PI * 2) * 6
+  camera.position.z = Math.cos(cursor.x * Math.PI * 2) * 6
+  camera.position.y = cursor.y * 9
+  camera.lookAt(cube.position);
+
+  renderer.render(scene, camera)
+  window.requestAnimationFrame(animate)
+}
+
+animate()
